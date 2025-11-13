@@ -1,0 +1,53 @@
+groups:
+  - name: app_alerts
+    interval: 15s
+    rules:
+      # Alert when CPU usage exceeds 70%
+      - alert: HighCPUUsage
+        expr: |
+          (
+            node_cpu_seconds_total{mode!="idle"} 
+            / 
+            node_cpu_seconds_total
+          ) * 100 > 70
+        for: 1m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 70% for more than 1 minute. Current value: {{ $value }}%"
+
+      # Alert when app becomes unhealthy
+      - alert: AppUnhealthy
+        expr: app_health_status == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "Application is unhealthy"
+          description: "The demo application health check is failing. App status: {{ $value }}"
+
+      # Alert when app is down (no metrics)
+      - alert: AppDown
+        expr: up{job="demo-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "Application is down"
+          description: "The demo application is not responding. It has been down for more than 1 minute."
+
+      # Alert when response time is high
+      - alert: HighResponseTime
+        expr: app_response_time_seconds > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "High response time detected"
+          description: "Application response time is above 500ms for more than 2 minutes. Current value: {{ $value }}s"
+
